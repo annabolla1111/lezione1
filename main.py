@@ -2,6 +2,7 @@
 #semplice gestionale aziendale. dovremo prevedere la possibilita di
 #definire entita che modellino i prodotti, i clienti, offrire
 #interfacce per calcolare i prezzi eventualmente scontati ecc
+from logging import raiseExceptions
 
 #come avrei fatto il primo anno (non va bene)
 prodotto1_nome = "Laptop"
@@ -28,6 +29,7 @@ class Prodotto:
     def __init__(self, nome: str, prezzo: float, quantita: int, fornitore = None): #queste quantita le passo come argomento al costruttore
        #fornitore = ... è il default se non viene passato nulla
         self.nome = nome
+        self._prezzo = None
         self.prezzo = prezzo
         self.quantita = quantita
         self.fornitore = fornitore
@@ -40,7 +42,7 @@ class Prodotto:
     #posso pero suggerire il tipo nel costruttore
 
     def valore_netto(self):
-        return self.prezzo*self.quantita
+        return self._prezzo*self.quantita
 
     def valore_lordo(self):
         netto = self.valore_netto()
@@ -62,6 +64,16 @@ class Prodotto:
     def applica_sconto(prezzo,percentuale): #non devo passare ne cls ne self
         return prezzo*(1-percentuale)
 
+    @property #metodo che si comporta come getter e setter di java
+    def price(self): #getter
+        return self._prezzo
+    @price.setter # posso farlo solo se ho definito il getter
+    def price(self, valore):
+        if valore < 0: #faccio il controllo prima di assegnare il valore
+            raise ValueError("Attenzione il prezzo non puo essere negativo")
+        self._prezzo = valore
+
+
 
 
 
@@ -76,10 +88,19 @@ print(f"nome prodotto: {mioprodotto1.nome} - prezzo: {mioprodotto1.prezzo}")
 print(f"Il totale lordo di mioprodotto1 è {mioprodotto1.valore_lordo()}") #uso un metodo di istanza
 p3 = Prodotto.costruttore_con_quantita_uno("Auricolari", 200, "ABC") #uso per chiamare metodo di classe
 print(f"Prezzo scontato di mioprodotto1 {Prodotto.applica_sconto(mioprodotto1.prezzo, percentuale= 0.15)}")
+
 mioprodotto2 = Prodotto("Mouse", 10.0, 25, "CDE")
 
 
 print(f"nome prodotto: {mioprodotto2.nome} - prezzo: {mioprodotto2.prezzo}")
+
+print(f"valore lordo di myproduct1: {mioprodotto1.valore_lordo()}") #prima dell'aggiornamento iva
+
+Prodotto.aliquota_iva = 0.24 #se cambio il valore dell'iva tutte le istanze di prodotto avranno l'iva aggiornata
+#ho modificato il paramentro della classe
+
+
+print(f"valore lordo di myproduct1: {mioprodotto1.valore_lordo()}") #dopo l'aggiornamento
 
 #funziona perche non devo ripere codice
 #rispetto principio incapsulamento
@@ -89,17 +110,34 @@ print(f"nome prodotto: {mioprodotto2.nome} - prezzo: {mioprodotto2.prezzo}")
 # formattata in un certo modo
 #"Cliente Fulvio Bianchi (Gold) - fulvio@google.com"
 
+#si modifichi la classe cliente in maniera tale che la propr categoria sia
+#protetta e accetti solo (Gold, Silver, Bronze)
+
 class Cliente:
     def __init__(self, nome, email, categoria):
         self.nome = nome
         self.email = email
+        self._categoria = None
         self.categoria = categoria
+
+    @property
+    def categoria(self):
+        return self._categoria
+    @categoria.setter
+    def categoria(self, categoria):
+        categorie_valide = {"Gold", "Silver", "Bronze"}
+        if categoria not in categorie_valide:
+            raise ValueError("Attenzione, categoria non valida scegliere tra Gold, Silver, Bronze")
+        self._categoria = categoria
+
+
 
     def descrizione(self): #to_string in java
         return f"Cliente {self.nome} ({self.categoria}) - {self.email}"
 
 c1 = Cliente("Mario Bianchi", "mario@google.com", "Gold")
 c2 = Cliente("Fulvio Bianchi", "fulvio@google.com", "Gold")
+#c3 = Cliente("Carlo Bianchi", "carlo@google.com", "Platinum") #mi da value error
 #se faccio print(c1) mi da una cosa strana. perche sto stampando un oggetto
 #mi restituisce l'indirizzo di memoria dove si trova l'oggetto
 print(c1.descrizione())
