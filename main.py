@@ -79,3 +79,4 @@ print("------------------------------")
 #nel package gestionale scriviamo un modulo fatture.py che contenga:
 #- una classe fattura, che contiene un ordine, un numero fattura e una data
 #- un metodo genera_fattura che restituisce una stringa formattata con tutte le info della fattura
+#
