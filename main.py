@@ -26,6 +26,7 @@ print("=============================")
 from gestionale.vendite.ordini import Ordine, RigaOrdine, OrdineconSconto
 from gestionale.core.prodotti import Prodotto, creo_prodotto_standard, ProdottoRecord
 from gestionale.core.clienti import Cliente, ClienteRecord
+import networkx as nx
 
 p1 = Prodotto("Ebook", 120.0, 1, "AAA")
 p2 = creo_prodotto_standard("Tablet", 750.0)
