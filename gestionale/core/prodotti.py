@@ -101,6 +101,12 @@ class ProdottoRecord:
     nome: str
     prezzo_unitario: float
 
+    def __hash__(self):
+        return hash((self.nome, self.prezzo_unitario)) #passiamo una tupla con gli elem che ci servonos
+
+    def __str__(self):
+        return f"{self.nome} -- {self.prezzo_unitario}"
+
 MAX_QUANTITA = 1000
 
 def creo_prodotto_standard(nome:str,prezzo:float):
