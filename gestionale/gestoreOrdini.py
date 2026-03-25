@@ -27,6 +27,12 @@ class GestoreOrdini: #IL MODELLO
         print(f"Ricevuto nuovo ordine da parte di {ordine.cliente}")
         print(f"Ordini ancora da evadere {len(self._ordini_da_processare)}")
 
+    #creo un metodo crea ordine che prende le sei quantita e crea un ordine
+    def crea_ordine(self, nomeP, prezzoP, quantitaP, nomeC, mailC, categoriaC):
+        #l'ordine è fatto da una lista di riga ordine e da un cliente
+        return Ordine([RigaOrdine(ProdottoRecord(nomeP, prezzoP), quantitaP)],
+                      ClienteRecord(nomeC, mailC, categoriaC)) #mi restituisce la "o" che mi serviva
+
     def processa_prossimo_ordine(self):
         """Questo metodo legge il prossimo ordine in coda e lo gestisce"""
         #aggiorna delle categorie
