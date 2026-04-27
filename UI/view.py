@@ -2,11 +2,13 @@ import flet as ft
 
 class View:
     def __init__(self,page):
+        #nel costruttore dovrei menzionare tutti gli elem menzionati nel carica interfaccia ma non siamo obbligati
         self._page = page
         self._controller = None
         self._page.title = "Tdp 2025 - Software Gestionale" #titolo pagina
         self._page.horizontal_alignment = "CENTER" #allineare al cenrtro
         self._page.theme_mode = ft.ThemeMode.LIGHT #Queste ce le danno gia all'esame
+        self._txtInNomeP = None
         self.update_page() #ho creato il metodo sotto
 
     def carica_interfaccia(self):

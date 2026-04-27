@@ -7,9 +7,11 @@ assicurandomi che sia eseguito solo dopo gli altri.
 3) fornire statistiche sulla distribuzione di ordini per categoria di cliente.
 """
 from collections import deque, Counter, defaultdict
+import random
 
-from gestionale.core.clienti import ClienteRecord
-from gestionale.core.prodotti import ProdottoRecord
+from dao.dao import DAO
+from gestionale.core.cliente import ClienteRecord
+from gestionale.core.prodotto import ProdottoRecord
 from gestionale.vendite.ordini import Ordine, RigaOrdine
 
 
@@ -20,6 +22,23 @@ class GestoreOrdini: #IL MODELLO
         self._statistiche_prodotti = Counter()
         self._ordini_per_categoria = defaultdict(list) #gli passiamo come factory una lista, chiavi: categorie, valori: ordini
         #defaultdict per evitare il controllo sull'esistenza della categoria, se categoria non esiste mi restit lista vuota
+        #self._dao = DAO() uso i metodi del dao chiamandoli direttam dal dao
+        self._allP = []
+        self._allC = []
+        self._fill_data()
+
+    def _fill_data(self): #usa il dao per creare degli ordini
+        # Leggo prodotti e clienti dal db, e poi creo degli ordini randomici per testare la mia app.
+        self._allP.extend(DAO.getAllProdotti()) #se ho gia qualcosa gli aggiungo
+        self._allC.extend(DAO.getAllClienti())
+
+        for i in range(10):
+            indexP = random.randint(0, len(self._allP) - 1)
+            indexC = random.randint(0, len(self._allC) - 1)
+            ordine = Ordine([RigaOrdine(self._allP[indexP], random.randint(1, 5))],
+                            self._allC[indexC]) #ordine vuole ...
+            self.add_ordine(ordine)
+
 
     def add_ordine(self, ordine: Ordine):
         """Aggiunge un nuovo ordine agli elementi da gestire"""
@@ -30,8 +49,19 @@ class GestoreOrdini: #IL MODELLO
     #creo un metodo crea ordine che prende le sei quantita e crea un ordine
     def crea_ordine(self, nomeP, prezzoP, quantitaP, nomeC, mailC, categoriaC):
         #l'ordine è fatto da una lista di riga ordine e da un cliente
-        return Ordine([RigaOrdine(ProdottoRecord(nomeP, prezzoP), quantitaP)],
-                      ClienteRecord(nomeC, mailC, categoriaC)) #mi restituisce la "o" che mi serviva
+        #quando creo l'ordine creo gli oggetti prodotto e cliente
+        prod = ProdottoRecord(nomeP, prezzoP)
+        cliente = ClienteRecord(nomeC, mailC, categoriaC)
+
+        self._update_DB(prod, cliente)
+        return Ordine([RigaOrdine(prod, quantitaP)], cliente)
+
+    def _update_DB(self, prod, cliente): #si chiede se ci sono già
+        if not DAO.hasProdotto(prod):
+            DAO.addProdotto(prod) #prova ad aggiungere al database, se ce gia non lo aggiunge
+
+        if not DAO.hasCliente(cliente):
+            DAO.addCliente(cliente)
 
     def processa_prossimo_ordine(self):
         """Questo metodo legge il prossimo ordine in coda e lo gestisce"""
@@ -41,7 +71,7 @@ class GestoreOrdini: #IL MODELLO
         #assicuriamoci che un ordine da processare esista
         if not self._ordini_da_processare:
             print("Non ci sono ordini in coda")
-            return False
+            return False, Ordine([], ClienteRecord("","","")) #ordine vuoto che avra 2 campi composti da lista e cliente
 
         #se esiste gestiamo il primo in coda
         ordine = self._ordini_da_processare.popleft() #logica FIFO
@@ -67,7 +97,7 @@ class GestoreOrdini: #IL MODELLO
         print("Ordine correttamente processato")
         return True
 
-    def processa_tutti_gli_ordini(self):
+    def processa_tutti_ordini(self):
         """Processa tutti gli ordini attualmente presenti in coda."""
         print("\n" + "=" * 60)
         print(f"Processando {len(self._ordini_da_processare)} ordini")
@@ -110,6 +140,23 @@ class GestoreOrdini: #IL MODELLO
         for cat, fatturato in self.get_distribuzione_categorie():
             print(f"{cat} : {fatturato}")
 
+    def get_riepilogo(self):
+        """Restituisce una stringa con le info di massima"""
+        sommario = ""
+        sommario += "\n" + "="*60
+        sommario += f"\n Ordini correttamente gestiti: {len(self._ordini_processati)}"
+        sommario += f"\n Ordini in coda: {len(self._ordini_da_processare)}"
+
+        sommario += "\n Prodotti più venduti:"
+        for prod, quantità in self.get_statistiche_prodotti():
+            sommario += f"\n {prod}: {quantità}"
+
+        sommario += f"\n Fatturato per categoria:"
+        for cat, fatturato in self.get_distribuzione_categorie():
+            sommario += f"\n {cat} : {fatturato}"
+        sommario += "\n" + "="*60
+        return sommario
+
 def test_modulo():
     sistema = GestoreOrdini()
 
@@ -139,7 +186,7 @@ def test_modulo():
     for o in ordini:
         sistema.add_ordine(o) #si aspetta un ordine
 
-    sistema.processa_tutti_gli_ordini()
+    sistema.processa_tutti_ordini()
 
     sistema.stampa_riepilogo()
 
